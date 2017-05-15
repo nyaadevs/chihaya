@@ -12,6 +12,9 @@ import (
 	"github.com/chihaya/chihaya/middleware"
 	"github.com/chihaya/chihaya/middleware/clientapproval"
 	"github.com/chihaya/chihaya/middleware/jwt"
+	"github.com/chihaya/chihaya/middleware/nya"
+	"github.com/chihaya/chihaya/middleware/nya/stats"
+	"github.com/chihaya/chihaya/middleware/nya/whitelist"
 	"github.com/chihaya/chihaya/middleware/varinterval"
 
 	// Imported to register as Storage Drivers.
@@ -95,11 +98,28 @@ func (cfg Config) CreateHooks() (preHooks, postHooks []middleware.Hook, err erro
 				return nil, nil, errors.New("invalid interval variation middleware config: " + err.Error())
 			}
 			preHooks = append(preHooks, hook)
+		case "nya prehook":
+			var nyaConfig nya.Config
+			err := yaml.Unmarshal(cfgBytes, &nyaConfig)
+			if err != nil {
+				return nil, nil, errors.New("invalid nya whitelist middleware config: " + err.Error())
+			}
+			hook, err := whitelist.NewHook(nyaConfig)
+			if err != nil {
+				return nil, nil, errors.New("invalid nya whitelist middleware config: " + err.Error())
+			}
+			preHooks = append(preHooks, hook)
 		}
 	}
 
 	for _, hookCfg := range cfg.PostHooks {
 		switch hookCfg.Name {
+		case "nya posthook":
+			hook, err := stats.NewHook()
+			if err != nil {
+				return nil, nil, errors.New("invalid nya stats middleware config: " + err.Error())
+			}
+			postHooks = append(postHooks, hook)
 		}
 	}
 

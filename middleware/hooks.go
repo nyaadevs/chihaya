@@ -162,11 +162,6 @@ func (h *responseHook) appendPeers(req *bittorrent.AnnounceRequest, resp *bittor
 	// Some clients expect a minimum of their own peer representation returned to
 	// them if they are the only peer in a swarm.
 	if len(peers) == 0 {
-		if seeding {
-			resp.Complete++
-		} else {
-			resp.Incomplete++
-		}
 		peers = append(peers, req.Peer)
 	}
 

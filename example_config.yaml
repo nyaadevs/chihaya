@@ -87,22 +87,14 @@ chihaya:
   # This block defines configuration used for middleware executed before a
   # response has been returned to a BitTorrent client.
   prehooks:
-  #- name: jwt
-  #  config:
-  #    issuer: "https://issuer.com"
-  #    audience: "https://chihaya.issuer.com"
-  #    jwk_set_url: "https://issuer.com/keys"
-  #    jwk_set_update_interval: 5m
+    - name: nya prehook
+      config:
+        database_uri: root:@/nyaav2
+        torrents_table: nyaa_torrents
+        stats_table: nyaa_statistics
+        stats_query_tries: 4
+        stats_query_interval: 10s
 
-  #- name: client approval
-  #  config:
-  #    whitelist:
-  #    - "OP1011"
-  #    blacklist:
-  #    - "OP1012"
+  posthooks:
+    - name: nya posthook
 
-  #- name: interval variation
-  #  config:
-  #    modify_response_probability: 0.2
-  #    max_increase_delta: 60
-  #    modify_min_interval: true
