@@ -90,3 +90,8 @@ func (h *hook) HandleScrape(ctx context.Context, req *bittorrent.ScrapeRequest, 
 	// Scrapes are not altered.
 	return ctx, nil
 }
+
+func (h *hook) HandleApi(ctx context.Context, req *bittorrent.ApiRequest, resp *bittorrent.ApiResponse) (context.Context, error) {
+	// Apis are not altered.
+	return ctx, nil
+}

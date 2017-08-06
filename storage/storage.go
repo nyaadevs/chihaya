@@ -91,6 +91,9 @@ type PeerStore interface {
 	// log.Fielder returns a loggable version of the data used to configure and
 	// operate a particular peer store.
 	log.Fielder
+
+	// Nukes a torrents infohash from the storage.
+	DeleteInfoHash(infoHash bittorrent.InfoHash) error
 }
 
 // RegisterDriver makes a Driver available by the provided name.

@@ -44,6 +44,9 @@ chihaya:
     # Disabling this should increase performance/decrease load.
     enable_request_timing: false
 
+    # Authentication key for the /api endpoint
+    api_auth: "topsecret"
+
   # This block defines configuration for the tracker's UDP interface.
   # If you do not wish to run this, delete this section.
   udp:
@@ -89,11 +92,12 @@ chihaya:
   prehooks:
     - name: nya prehook
       config:
-        database_uri: root:@/nyaav2
+        database_uri: user:password@tcp(127.0.0.1:3306)/nyaav2
         torrents_table: nyaa_torrents
         stats_table: nyaa_statistics
         stats_query_tries: 4
         stats_query_interval: 10s
+        banned_flag: 64
 
   posthooks:
     - name: nya posthook

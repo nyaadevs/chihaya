@@ -93,6 +93,21 @@ func (l *Logic) HandleScrape(ctx context.Context, req *bittorrent.ScrapeRequest)
 	return ctx, resp, nil
 }
 
+// HandleApi generates a response for an api request.
+func (l *Logic) HandleApi(ctx context.Context, req *bittorrent.ApiRequest) (resp *bittorrent.ApiResponse, err error) {
+	resp = &bittorrent.ApiResponse{
+		Files: make([]bittorrent.Api, 0, len(req.InfoHashes)),
+	}
+	for _, h := range l.preHooks {
+		if ctx, err = h.HandleApi(ctx, req, resp); err != nil {
+			return nil, err
+		}
+	}
+
+	log.Debug("generated scrape response", resp)
+	return resp, nil
+}
+
 // AfterScrape does something with the results of a Scrape after it has been
 // completed.
 func (l *Logic) AfterScrape(ctx context.Context, req *bittorrent.ScrapeRequest, resp *bittorrent.ScrapeResponse) {

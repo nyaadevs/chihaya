@@ -102,6 +102,38 @@ func ParseScrape(r *http.Request) (*bittorrent.ScrapeRequest, error) {
 	return request, nil
 }
 
+// ParseApi parses an bittorrent.ApiRequest from an http.Request.
+func ParseApi(r *http.Request) (*bittorrent.ApiRequest, error) {
+	qp, err := bittorrent.ParseURLData(r.RequestURI)
+	if err != nil {
+		return nil, err
+	}
+
+	infoHashes := qp.InfoHashes()
+	if len(infoHashes) < 1 {
+		return nil, bittorrent.ClientError("no info_hash parameter supplied")
+	}
+
+	auth, ok := qp.String("auth")
+	if !ok {
+		return nil, bittorrent.ClientError("no auth parameter supplied")
+	}
+
+	method, ok := qp.String("method")
+	if !ok {
+		return nil, bittorrent.ClientError("no method parameter supplied")
+	}
+
+	request := &bittorrent.ApiRequest{
+		InfoHashes: infoHashes,
+		Auth:       auth,
+		Method:     method,
+		Params:     qp,
+	}
+
+	return request, nil
+}
+
 // requestedIP determines the IP address for a BitTorrent client request.
 //
 // If allowIPSpoofing is true, IPs provided via params will be used.

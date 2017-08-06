@@ -85,6 +85,22 @@ func WriteScrapeResponse(w http.ResponseWriter, resp *bittorrent.ScrapeResponse)
 	})
 }
 
+// WriteApiResponse communicates the results of an Api request to a BitTorrent
+// client over HTTP.
+func WriteApiResponse(w http.ResponseWriter, resp *bittorrent.ApiResponse) error {
+	filesDict := bencode.NewDict()
+	for _, api := range resp.Files {
+		filesDict[string(api.InfoHash[:])] = bencode.Dict{
+			"error":   api.Error,
+			"response": api.Response,
+		}
+	}
+
+	return bencode.NewEncoder(w).Encode(bencode.Dict{
+		"files": filesDict,
+	})
+}
+
 func compact4(peer bittorrent.Peer) (buf []byte) {
 	if ip := peer.IP.To4(); ip == nil {
 		panic("non-IPv4 IP for Peer in IPv4Peers")

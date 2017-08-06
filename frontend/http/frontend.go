@@ -70,6 +70,7 @@ type Config struct {
 	TLSCertPath         string        `yaml:"tls_cert_path"`
 	TLSKeyPath          string        `yaml:"tls_key_path"`
 	EnableRequestTiming bool          `yaml:"enable_request_timing"`
+	ApiAuth             string        `yaml:"api_auth"`
 }
 
 // LogFields renders the current config as a set of Logrus fields.
@@ -83,6 +84,7 @@ func (cfg Config) LogFields() log.Fields {
 		"tlsCertPath":         cfg.TLSCertPath,
 		"tlsKeyPath":          cfg.TLSKeyPath,
 		"enableRequestTiming": cfg.EnableRequestTiming,
+		"api_auth":            cfg.ApiAuth,
 	}
 }
 
@@ -142,6 +144,7 @@ func (f *Frontend) handler() http.Handler {
 	router := httprouter.New()
 	router.GET("/announce", f.announceRoute)
 	router.GET("/scrape", f.scrapeRoute)
+	router.GET("/api", f.apiRoute)
 	return router
 }
 
@@ -261,4 +264,56 @@ func (f *Frontend) scrapeRoute(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	go f.logic.AfterScrape(ctx, req, resp)
+}
+
+// apiRoute parses and responds to an API call.
+func (f *Frontend) apiRoute(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var err error
+	start := time.Now()
+	var af *bittorrent.AddressFamily
+	defer func() { recordResponseDuration("api", af, err, time.Since(start)) }()
+
+	req, err := ParseApi(r)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	if req.Auth != f.ApiAuth {
+		err = bittorrent.ClientError("api authentication error")
+		WriteError(w, err)
+		return
+	}
+
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		log.Error("http: unable to determine remote address for scrape", log.Err(err))
+		WriteError(w, err)
+		return
+	}
+
+	reqIP := net.ParseIP(host)
+	if reqIP.To4() != nil {
+		req.AddressFamily = bittorrent.IPv4
+	} else if len(reqIP) == net.IPv6len { // implies reqIP.To4() == nil
+		req.AddressFamily = bittorrent.IPv6
+	} else {
+		log.Error("http: invalid IP: neither v4 nor v6", log.Fields{"RemoteAddr": r.RemoteAddr})
+		WriteError(w, ErrInvalidIP)
+		return
+	}
+	af = new(bittorrent.AddressFamily)
+	*af = req.AddressFamily
+
+	resp, err := f.logic.HandleApi(context.Background(), req)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	err = WriteApiResponse(w, resp)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
 }

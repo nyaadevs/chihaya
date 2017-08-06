@@ -14,6 +14,7 @@ import (
 type Hook interface {
 	HandleAnnounce(context.Context, *bittorrent.AnnounceRequest, *bittorrent.AnnounceResponse) (context.Context, error)
 	HandleScrape(context.Context, *bittorrent.ScrapeRequest, *bittorrent.ScrapeResponse) (context.Context, error)
+	HandleApi(context.Context, *bittorrent.ApiRequest, *bittorrent.ApiResponse) (context.Context, error)
 }
 
 type skipSwarmInteraction struct{}
@@ -67,6 +68,16 @@ func (h *swarmInteractionHook) HandleScrape(ctx context.Context, _ *bittorrent.S
 	return ctx, nil
 }
 
+func (h *swarmInteractionHook) HandleApi(ctx context.Context, req *bittorrent.ApiRequest, resp *bittorrent.ApiResponse) (context.Context, error) {
+	if req.Method == "delete" {
+		for _, infoHash := range req.InfoHashes {
+			h.store.DeleteInfoHash(infoHash)
+		}
+	}
+
+	return ctx, nil
+}
+
 // ErrInvalidIP indicates an invalid IP for an Announce.
 var ErrInvalidIP = errors.New("invalid IP")
 
@@ -114,6 +125,11 @@ func (h *sanitizationHook) HandleScrape(ctx context.Context, req *bittorrent.Scr
 		req.InfoHashes = req.InfoHashes[:h.maxScrapeInfoHashes]
 	}
 
+	return ctx, nil
+}
+
+func (h *sanitizationHook) HandleApi(ctx context.Context, req *bittorrent.ApiRequest, resp *bittorrent.ApiResponse) (context.Context, error) {
+	// We trust ourselves, do we?
 	return ctx, nil
 }
 
@@ -186,5 +202,9 @@ func (h *responseHook) HandleScrape(ctx context.Context, req *bittorrent.ScrapeR
 		resp.Files = append(resp.Files, h.store.ScrapeSwarm(infoHash, req.AddressFamily))
 	}
 
+	return ctx, nil
+}
+
+func (h *responseHook) HandleApi(ctx context.Context, req *bittorrent.ApiRequest, resp *bittorrent.ApiResponse) (context.Context, error) {
 	return ctx, nil
 }

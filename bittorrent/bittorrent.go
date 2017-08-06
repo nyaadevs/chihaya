@@ -144,6 +144,37 @@ type Scrape struct {
 	Incomplete uint32
 }
 
+// ApiRequest represents the parsed parameters from an api request.
+type ApiRequest struct {
+	AddressFamily AddressFamily
+	InfoHashes    []InfoHash
+	Auth          string
+	Method        string
+	Params        Params
+}
+
+// ApiResponse represents the parameters used to create an api response.
+//
+// The Apis must be in the same order as the InfoHashes in the corresponding
+// ApiRequest.
+type ApiResponse struct {
+	Files []Api
+}
+
+// LogFields renders the current response as a set of Logrus fields.
+func (sr ApiResponse) LogFields() log.Fields {
+	return log.Fields{
+		"files": sr.Files,
+	}
+}
+
+// Api represents the answer of an api request.
+type Api struct {
+	InfoHash   InfoHash
+	Error      int
+	Response   string
+}
+
 // AddressFamily is the address family of an IP address.
 type AddressFamily uint8
 

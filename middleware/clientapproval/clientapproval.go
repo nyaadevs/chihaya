@@ -77,3 +77,8 @@ func (h *hook) HandleScrape(ctx context.Context, req *bittorrent.ScrapeRequest, 
 	// Scrapes don't require any protection.
 	return ctx, nil
 }
+
+func (h *hook) HandleApi(ctx context.Context, req *bittorrent.ApiRequest, resp *bittorrent.ApiResponse) (context.Context, error) {
+	// Api doesn't require any protection.
+	return ctx, nil
+}

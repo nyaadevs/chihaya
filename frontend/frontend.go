@@ -28,4 +28,7 @@ type TrackerLogic interface {
 
 	// AfterScrape does something with the results of a Scrape after it has been completed.
 	AfterScrape(context.Context, *bittorrent.ScrapeRequest, *bittorrent.ScrapeResponse)
+
+	// HandleApi generates a response for an api request.
+	HandleApi(context.Context, *bittorrent.ApiRequest) (*bittorrent.ApiResponse, error)
 }

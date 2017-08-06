@@ -615,3 +615,29 @@ func (ps *peerStore) Stop() <-chan error {
 func (ps *peerStore) LogFields() log.Fields {
 	return ps.cfg.LogFields()
 }
+
+func (ps *peerStore) DeleteInfoHash(ih bittorrent.InfoHash) error {
+	select {
+	case <-ps.closed:
+		panic("attempted to interact with stopped memory store")
+	default:
+	}
+
+	addressFamilies := [2]bittorrent.AddressFamily{bittorrent.IPv4, bittorrent.IPv6}
+
+	for _, family := range addressFamilies {
+		shard := ps.shards[ps.shardIndex(ih, family)]
+		shard.Lock()
+
+		if _, ok := shard.swarms[ih]; !ok {
+			shard.Unlock()
+			continue
+		}
+
+		delete(shard.swarms, ih)
+
+		shard.Unlock()
+	}
+
+	return nil
+}

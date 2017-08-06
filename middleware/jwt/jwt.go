@@ -158,6 +158,11 @@ func (h *hook) HandleScrape(ctx context.Context, req *bittorrent.ScrapeRequest, 
 	return ctx, nil
 }
 
+func (h *hook) HandleApi(ctx context.Context, req *bittorrent.ApiRequest, resp *bittorrent.ApiResponse) (context.Context, error) {
+	// Api doen't require any protection.
+	return ctx, nil
+}
+
 func validateJWT(ih bittorrent.InfoHash, jwtBytes []byte, cfgIss, cfgAud string, publicKeys map[string]crypto.PublicKey) error {
 	parsedJWT, err := jws.ParseJWT(jwtBytes)
 	if err != nil {
